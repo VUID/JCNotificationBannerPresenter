@@ -5,6 +5,7 @@
 #import "JCNotificationBannerView.h"
 #import "JCNotificationBannerWindow.h"
 #import "JCNotificationBannerViewController.h"
+#import "NSObject+Abstraction.h"
 #import <QuartzCore/QuartzCore.h>
 
 @implementation JCNotificationBannerPresenter
