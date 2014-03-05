@@ -3,6 +3,10 @@
 #import "JCNotificationBannerViewIOS7Style.h"
 #import "JCNotificationBannerViewController.h"
 
+@interface JCNotificationBannerPresenterIOS7Style()
+@property (copy) void (^DismissPresentingBanner)();
+@end
+
 @implementation JCNotificationBannerPresenterIOS7Style
 
 - (id) init {
@@ -65,6 +69,8 @@
         originalTapHandler();
       }
 
+      if (banner.notificationBanner.manualRemoval) return;
+        
       [banner removeFromSuperview];
       finished();
       // Break the retain cycle
@@ -86,25 +92,38 @@
                    }];
 
 
+    
+    
+    _DismissPresentingBanner =  ^{
+        [UIView animateWithDuration:0.5 delay:0 options:UIViewAnimationOptionCurveEaseIn
+                         animations:^{
+                             banner.frame = CGRectOffset(banner.frame, 0, -banner.frame.size.height);
+                             banner.alpha = 0;
+                         } completion:^(BOOL didFinish) {
+                             if ([banner getCurrentPresentingStateAndAtomicallySetPresentingState:NO]) {
+                                 [banner removeFromSuperview];
+                                 [containerView removeFromSuperview];
+                                 finished();
+                                 // Break the retain cycle
+                                 notification.tapHandler = nil;
+                             }
+                         }];
+        _DismissPresentingBanner = nil;
+    };
+    
+  
   // On timeout, slide it up while fading it out.
-  if (notification.timeout > 0.0) {
+  if (notification.timeout > 0.0 && !banner.notificationBanner.manualRemoval) {
     dispatch_time_t popTime = dispatch_time(DISPATCH_TIME_NOW, notification.timeout * NSEC_PER_SEC);
     dispatch_after(popTime, dispatch_get_main_queue(), ^(void){
-      [UIView animateWithDuration:0.5 delay:0 options:UIViewAnimationOptionCurveEaseIn
-                       animations:^{
-                         banner.frame = CGRectOffset(banner.frame, 0, -banner.frame.size.height);
-                         banner.alpha = 0;
-                       } completion:^(BOOL didFinish) {
-                         if ([banner getCurrentPresentingStateAndAtomicallySetPresentingState:NO]) {
-                           [banner removeFromSuperview];
-                           [containerView removeFromSuperview];
-                           finished();
-                           // Break the retain cycle
-                           notification.tapHandler = nil;
-                         }
-                       }];
+        _DismissPresentingBanner();
     });
   }
+    
+}
+
+- (void)dismissPresentingBanner {
+    if (_DismissPresentingBanner != nil) _DismissPresentingBanner();
 }
 
 #pragma mark - View helpers

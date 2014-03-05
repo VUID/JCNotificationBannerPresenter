@@ -34,6 +34,7 @@
                     finished:(JCNotificationBannerPresenterFinishedBlock)finished {
   // Abstract. Override this and call finished() whenever you are
   // done showing the notification.
+    [self subclassResponsibility:_cmd];
 }
 
 // JCNotificationCenter calls this each time a notification should be presented.
@@ -48,6 +49,10 @@
                    inWindow:bannerWindow
                    finished:finished];
 
+}
+
+- (void)dismissPresentingBanner {
+    [self subclassResponsibility:_cmd];
 }
 
 #pragma mark - View helpers

@@ -31,6 +31,7 @@
   [JCNotificationCenter
    enqueueNotificationWithTitle:self.titleTextField.text
    message:self.messageTextView.text
+   queuePriority:nil
    tapHandler:^{
      UIAlertView* alert = [[UIAlertView alloc]
                            initWithTitle:@"Tapped notification"

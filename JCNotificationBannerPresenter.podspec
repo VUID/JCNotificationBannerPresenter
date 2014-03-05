@@ -10,4 +10,5 @@ Pod::Spec.new do |s|
   s.framework    = 'QuartzCore'
   s.source       = { :git => 'https://github.com/jcoleman/JCNotificationBannerPresenter.git', :tag => '1.0.3' }
   s.source_files = 'Library/*.{h,m}'
+	s.dependency 'JCPriorityQueue'
 end

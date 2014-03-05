@@ -43,9 +43,11 @@
 /** Adds notification with iOS banner Style to queue with given parameters. */
 + (void) enqueueNotificationWithTitle:(NSString*)title
                               message:(NSString*)message
+                        manualRemoval:(BOOL)manual
                            tapHandler:(JCNotificationBannerTapHandlingBlock)tapHandler {
   JCNotificationBanner* notification = [[JCNotificationBanner alloc] initWithTitle:title
                                                                            message:message
+                                                                            manual:manual
                                                                         tapHandler:tapHandler];
   
   [[self sharedCenter] enqueueNotification:notification];
@@ -53,10 +55,12 @@
 
 - (void) enqueueNotificationWithTitle:(NSString*)title
                               message:(NSString*)message
+                        manualRemoval:(BOOL)manual
                            tapHandler:(JCNotificationBannerTapHandlingBlock)tapHandler {
   JCNotificationBanner* notification = [[JCNotificationBanner alloc]
                                         initWithTitle:title
                                         message:message
+                                        manual:manual
                                         tapHandler:tapHandler];
   [self enqueueNotification:notification];
 }
@@ -95,7 +99,7 @@
         [_currentPresenter willBeginPresentingNotifications];
       }
       JCNotificationBanner* nextNotification = [self dequeueNotification];
-      if (nextNotification) {
+        if (nextNotification) {
         [_currentPresenter presentNotification:nextNotification
                                       finished:^{
                                         [self donePresentingNotification:nextNotification];
@@ -109,6 +113,30 @@
       // Notification presentation already in progress; do nothing.
     }
   });
+}
+
+- (void) endPresentingNotification {
+    dispatch_async(dispatch_get_main_queue(), ^{
+        // Check if presenting is currently in progress
+        if (![isPresentingMutex tryLock]) {
+            [enqueuedNotifications removeAllObjects];
+            if (_currentPresenter != _nextPresenter) {
+                // Finish up with the original one.
+                [_currentPresenter didFinishPresentingNotifications];
+                _currentPresenter = nil;
+            }
+            
+            if (!_currentPresenter) {
+                _currentPresenter = _nextPresenter;
+                [_currentPresenter willBeginPresentingNotifications];
+            }
+            
+            [_currentPresenter dismissPresentingBanner];
+  
+        } else {
+            [isPresentingMutex unlock];
+        }
+    });
 }
 
 - (void) donePresentingNotification:(JCNotificationBanner*)notification {
